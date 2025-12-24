@@ -7,7 +7,7 @@ $userBody = @{
     username = "sim_user_$(Get-Random)"
     password = "password"
     fullName = "Simulation User"
-    role = "EMPLOYEE"
+    role     = "EMPLOYEE"
 } | ConvertTo-Json
 
 $userId = 1
@@ -19,7 +19,8 @@ try {
         $userId = $user.id
         Write-Host "Created Simulation User with ID: $userId"
     }
-} catch {
+}
+catch {
     Write-Host "Could not create new user (maybe service is down or user dup). Defaulting to ID 1."
     Write-Host "Error: $_"
 }
@@ -36,19 +37,20 @@ while ($true) {
     for ($i = 1; $i -le 200; $i++) {
         $skuRandom = Get-Random -Minimum 1000 -Maximum 9999
         $body = @{
-            title = "Analysis Simulation $i"
+            title       = "Analysis Simulation $i"
             description = "Auto generated analysis for load testing req $i"
             responsible = @{ id = $userId }
-            status = "PENDING"
-            sku = "SKU-$skuRandom"
-            location = "LOC-$(Get-Random)"
+            status      = "PENDING"
+            sku         = "SKU-$skuRandom"
+            location    = "LOC-$(Get-Random)"
         } | ConvertTo-Json -Depth 10
 
         try {
             Invoke-RestMethod -Uri "$baseUrl/analyses" -Method Post -Body $body -ContentType "application/json" -ErrorAction Stop | Out-Null
             $count++
-        } catch {
-            Write-Host "Error sending request $i: $_"
+        }
+        catch {
+            Write-Host "Error sending request $($i): $_"
         }
         
         # Optional: slight delay to not completely choke if the machine is slow, 
