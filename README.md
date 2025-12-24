@@ -1,3 +1,50 @@
+README ENGLISH 
+# Loss Prevention Web System
+
+This project is a web-based system developed to help organize and manage data related to loss prevention processes.
+
+The application focuses on simplicity, usability, and clean structure, making it easy to understand and maintain.
+
+## Features
+- Web-based interface
+- Administrative dashboard
+- Data organization and management
+- Backend logic with database integration
+- Clean and structured codebase
+
+## Technologies Used
+- HTML
+- CSS
+- JavaScript
+- Node.js
+- MySQL
+- Git & GitHub
+
+## Project Purpose
+This project was created for learning and portfolio purposes, demonstrating the development of a complete web system with front-end, back-end, and database integration.
+
+## How to Run the Project
+1. Clone the repository
+2. Install dependencies
+3. Configure the database
+4. Run the application locally
+
+## Author
+Developed by Willian Cunha
+
+
+
+
+
+
+
+
+
+README PORTUGUES
+
+
+
+
 README.md – MODELO PROFISSIONAL (PORTFÓLIO)
 # Sistema de Prevenção de Perdas
 
@@ -130,3 +177,4 @@ Depois de colar o README:
 git add README.md
 git commit -m "atualiza README com descrição profissional do projeto"
 git push
+
