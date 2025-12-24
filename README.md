@@ -1,56 +1,132 @@
-# LP System - Prevention & Loss Management
+README.md – MODELO PROFISSIONAL (PORTFÓLIO)
+# Sistema de Prevenção de Perdas
 
-Sistema completo de gestão de prevenção de perdas (Loss Prevention), controle de inventário e análise de divergências. Desenvolvido com **Java Spring Boot**, **PostgreSQL**, **Redis** e interface moderna em **Vanilla JavaScript**.
+Sistema backend desenvolvido com foco em **controle de estoque**, **prevenção de perdas operacionais**
+e **análise de ocorrências**, pensado para ambientes como mercados, centros logísticos e operações internas.
 
-## 🚀 Tecnologias
+O projeto foi criado com objetivo de **portfólio profissional**, aplicando conceitos reais usados em sistemas corporativos.
 
-*   **Backend**: Java 17, Spring Boot 3, Spring Data JPA.
-*   **Banco de Dados**: PostgreSQL 15 (Persistência), Redis 7 (Cache/Filas).
-*   **Frontend**: HTML5, CSS3 Moderno, JavaScript (ES6+).
-*   **Infraestrutura**: Docker & Docker Compose.
+---
 
-## 📋 Funcionalidades Principais
+## 🎯 Objetivo
 
-*   **Dashboard**: Monitoramento em tempo real com badges de status.
-*   **Módulos de Gestão**:
-    *   **Pendentes**: Fila de itens aguardando análise.
-    *   **Análise**: Processo de investigação de divergências (com workflow de DFL/Found).
-    *   **DFLs (Damaged/Defective)**: Gestão de itens avariados.
-    *   **Founds**: Registro de itens encontrados (com valor e localização).
-    *   **Sistêmico**: Análise de erros sistêmicos/integrados.
-*   **Filtros Avançados**: Pesquisa por localização (Andar, Rua, Posição), Categoria, Risco e Valores.
-*   **Alta Performance**: Cache com Redis e arquitetura preparada para alto volume (Simulação de carga incluída).
+Ajudar empresas a:
+- Identificar produtos críticos
+- Analisar erros recorrentes
+- Registrar histórico de operações
+- Reduzir perdas operacionais
+- Apoiar a tomada de decisão na gestão de estoque
 
-## 🛠️ Como Rodar o Projeto
+---
+
+## 🧱 Arquitetura do Sistema
+
+O projeto segue uma **arquitetura em camadas**, separando responsabilidades:
+
+- **Repository** → Acesso a dados
+- **Service** → Regras de negócio
+- **Specification** → Filtros e consultas dinâmicas
+- **Util / Application** → Inicialização e utilidades
+
+Essa estrutura facilita manutenção, escalabilidade e testes.
+
+---
+
+## 📂 Estrutura do Projeto
+
+
+
+src/main/java
+├── repository
+│ ├── DFLRepository.java
+│ ├── ErrorLogRepository.java
+│ ├── FoundRepository.java
+│ ├── OperationHistoryRepository.java
+│ ├── RegisterRepository.java
+│ └── UserRepository.java
+│
+├── service
+│ ├── AnalysisService.java
+│ ├── DFLService.java
+│ ├── ErrorLogService.java
+│ ├── FoundService.java
+│ ├── OperationHistoryService.java
+│ ├── RegisterService.java
+│ └── UserService.java
+│
+├── specification
+│ └── filtros-dinamicos
+│
+└── util
+└── PrevencaoPerdasApplication.java
+
+
+---
+
+## 🔍 Funcionalidades
+
+- Registro de ocorrências de perdas
+- Histórico de operações
+- Controle de usuários
+- Análise de erros recorrentes
+- Estrutura preparada para filtros avançados
+- Base para relatórios e dashboards
+
+---
+
+## 🛠 Tecnologias Utilizadas
+
+- Java
+- Spring Boot
+- Maven
+- JPA / Hibernate
+- Banco de dados relacional
+- Docker (docker-compose)
+
+---
+
+## ▶️ Como Executar o Projeto
 
 ### Pré-requisitos
-*   Java 17+ instalado.
-*   Docker & Docker Compose instalados.
-*   Maven (opcional, se usar o wrapper).
+- Java 17+
+- Maven
+- Docker (opcional)
 
-### Passo a Passo
+### Execução local
+```bash
+mvn clean install
+mvn spring-boot:run
 
-1.  **Subir o Ambiente (Banco e Cache)**:
-    Execute o script na raiz do projeto:
-    ```bash
-    ./REINICIAR_AMBIENTE.bat
-    ```
-    Ou manualmente:
-    ```bash
-    docker-compose up -d
-    ```
+Execução com Docker
+docker-compose up
 
-2.  **Executar a Aplicação**:
-    No VS Code, abra `PrevencaoPerdasApplication.java` e clique em "Run".
-    Ou via terminal:
-    ```bash
-    ./mvnw spring-boot:run
-    ```
+📌 Status do Projeto
 
-3.  **Acessar**:
-    Abra seu navegador em: `http://localhost:8080/index.html`
+🚧 Projeto em desenvolvimento (portfólio).
 
-## ⚙️ Utilitários
+Próximos passos planejados:
 
-*   **Simulação de Carga**: Script `load_test.ps1` para gerar 200 registros/min para testes de stress.
-*   **Correção de Porta**: Script `MATAR_PORTA_8080.bat` para liberar a porta caso o servidor trave.
+Implementação de endpoints REST
+
+Criação de dashboard
+
+Relatórios de prevenção de perdas
+
+Integração com frontend
+
+👤 Autor
+
+Willian da Cunha Lima
+Projeto desenvolvido para fins de aprendizado prático e portfólio profissional.
+
+
+---
+
+## 🔥 Agora, MUITO IMPORTANTE (faça isso)
+
+Depois de colar o README:
+
+```bash
+git add README.md
+git commit -m "atualiza README com descrição profissional do projeto"
+git push
