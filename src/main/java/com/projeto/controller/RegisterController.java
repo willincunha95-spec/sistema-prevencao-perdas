@@ -17,10 +17,18 @@ public class RegisterController {
     private RegisterService registerService;
 
     @GetMapping
-    public ResponseEntity<Page<Register>> findAll(@RequestParam(required = false) Register.RegisterStatus status,
+    public ResponseEntity<Page<Register>> findAll(
+            @RequestParam(required = false) Register.RegisterStatus status,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String floor,
+            @RequestParam(required = false) String sector,
+            @RequestParam(required = false) String street,
+            @RequestParam(required = false) String risk,
+            @RequestParam(required = false) String valueRange,
             Pageable pageable) {
         Pageable safePageable = pageable != null ? pageable : Pageable.unpaged();
-        return ResponseEntity.ok(registerService.findAll(status, safePageable));
+        return ResponseEntity
+                .ok(registerService.findAll(status, search, floor, sector, street, risk, valueRange, safePageable));
     }
 
     @PostMapping
