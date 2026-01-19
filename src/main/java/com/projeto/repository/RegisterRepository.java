@@ -13,5 +13,7 @@ public interface RegisterRepository extends JpaRepository<Register, Long>, JpaSp
 
     Page<Register> findByStatus(Register.RegisterStatus status, Pageable pageable);
 
+    java.util.Optional<Register> findBySku(String sku);
+
     long countByStatus(Register.RegisterStatus status);
 }

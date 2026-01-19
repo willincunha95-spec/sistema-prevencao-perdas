@@ -109,13 +109,17 @@ const FilterEngine = {
                 else if (filterState.floor === 'andar_4') matchFloor = item.floor === '4';
             }
 
-            // Filtros de Setor (Depósito, Docas, Inventário)
+            // Filtros de Setor (Depósito, Docas, Inventário e Siglas)
             let matchSector = true;
             if (filterState.sector) {
                 if (filterState.sector === 'deposito') matchSector = location.includes('depósito') || location.includes('deposito');
                 else if (filterState.sector === 'docas') matchSector = location.includes('docas');
                 else if (filterState.sector === 'recebimento') matchSector = location.includes('recebimento');
                 else if (filterState.sector === 'inventario') matchSector = location.includes('an ') || /an\s*\d/.test(location);
+                else {
+                    // Para siglas (DV, RK, HV, MTU), verifica se a sigla está contida na string de localização
+                    matchSector = location.includes(filterState.sector.toLowerCase());
+                }
             }
 
             // Filtro por Blocos Logísticos (E, F, G) baseado em numeração de rua
@@ -145,6 +149,9 @@ const FilterEngine = {
                 else if (filterState.valueRange === 'high') matchValue = usdPrice > 100;
             }
 
+            // Filtro de Inventário (Texto parcial na localização)
+            const matchInventory = !filterState.inventoryLocation || location.includes(filterState.inventoryLocation);
+
             const matchType = !filterState.type || productName.toLowerCase().includes(filterState.type);
 
             // Filtro de Criticidade (Risco)
@@ -156,7 +163,13 @@ const FilterEngine = {
                 else if (filterState.risk === 'low') matchRisk = diffDays < 30;
             }
 
-            return matchSearch && matchFloor && matchSector && matchBlock && matchStreet && matchWeek && matchCategory && matchValue && matchType && matchRisk;
+            // Filtro de Tipo Sistêmico
+            const itemSystemType = (item.systemType || '').toLowerCase();
+            const matchSystemType = !filterState.systemType || itemSystemType === filterState.systemType.toLowerCase();
+
+            return matchSearch && matchFloor && matchSector && matchBlock && matchStreet &&
+                matchWeek && matchCategory && matchValue && matchType && matchRisk &&
+                matchInventory && matchSystemType;
         }).sort((a, b) => FilterEngine.getScore(b) - FilterEngine.getScore(a));
     }
 };
@@ -313,6 +326,16 @@ function openDetail(item) {
                 <div class="identifier-row"><span class="info-label">ID</span><span class="id-badge">${item.identifierId || 'S/ID'}</span></div>
                 <div class="identifier-row"><span class="info-label">SKU</span><span class="id-badge">${item.sku || '---'}</span></div>
             </div>
+            ${(currentModule === 'registers' || currentModule === 'analyses') ? `
+                <div class="analysis-actions">
+                    <button class="btn-action dfl" onclick="processAction('dfl', ${item.id})">
+                        <i class="fas fa-file-invoice"></i> Gerar DFL
+                    </button>
+                    <button class="btn-action found" onclick="processAction('found', ${item.id})">
+                        <i class="fas fa-box-open"></i> Marcar Found
+                    </button>
+                </div>
+            ` : ''}
         </div>
     `;
 
@@ -404,18 +427,178 @@ async function updateNavBadges() {
 function loadModule(module, label, element) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
-    currentModule = module === 'analysis' ? 'analyses' : (module === 'found-items' ? 'found-items' : module);
+    currentModule = module === 'analysis' ? 'analyses' : (module === 'found-items' ? 'found-items' : (module === 'found-inv' ? 'found-inv' : module));
     document.getElementById('current-module-title').innerText = label;
+    currentPage = 0; // Reset pagination
     fetchData();
+}
+
+// Processa ações de DFL ou Found
+async function processAction(type, id) {
+    if (type === 'dfl') {
+        if (!confirm('Deseja realmente gerar um DFL para este item?')) return;
+        try {
+            const res = await fetch(`${API_URL}/registers/${id}/dfl`, { method: 'POST' });
+            if (res.ok) {
+                closeModal();
+                fetchData();
+            }
+        } catch (e) { console.error(e); }
+    } else if (type === 'found') {
+        window.pendingFoundId = id;
+        document.getElementById('found-modal').style.display = 'flex';
+    }
+}
+
+// Lógica do Modal de Found
+function initFoundModal() {
+    const modal = document.getElementById('found-modal');
+    const closeBtn = document.getElementById('close-found-modal');
+    const cancelBtn = document.getElementById('btn-cancel-found');
+    const confirmBtn = document.getElementById('btn-confirm-found');
+    const input = document.getElementById('found-location-input');
+
+    const close = () => {
+        modal.style.display = 'none';
+        if (input) input.value = '';
+    };
+
+    if (closeBtn) closeBtn.onclick = close;
+    if (cancelBtn) cancelBtn.onclick = close;
+
+    if (confirmBtn) {
+        confirmBtn.onclick = async () => {
+            const location = input.value.trim();
+            if (!location) return alert('Por favor, informe a localização.');
+
+            try {
+                const res = await fetch(`${API_URL}/registers/${window.pendingFoundId}/found?location=${encodeURIComponent(location)}`, { method: 'POST' });
+                if (res.ok) {
+                    close();
+                    closeModal();
+                    fetchData();
+                }
+            } catch (e) { console.error(e); }
+        };
+    }
 }
 
 // Inicialização de eventos da página
 function initEvents() {
+    // Pesquisa Global (Input de Texto)
     const search = document.getElementById('global-search');
     if (search) {
         search.oninput = (e) => {
             filterState.search = e.target.value.toLowerCase();
             triggerFilter();
+        };
+    }
+
+    // Controle de Abertura/Fechamento do Painel de Filtros
+    const btnToggle = document.getElementById('btn-filter-toggle');
+    const btnClose = document.getElementById('btn-filter-close');
+    const panel = document.getElementById('filter-panel');
+    const sectorSelect = document.getElementById('filter-sector');
+    const blockSelect = document.getElementById('filter-block');
+
+    if (sectorSelect && blockSelect) {
+        sectorSelect.onchange = () => {
+            blockSelect.style.display = (sectorSelect.value === 'rk') ? 'block' : 'none';
+        };
+    }
+
+    if (btnToggle && panel) {
+        btnToggle.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = panel.style.display === 'block';
+            panel.style.display = isVisible ? 'none' : 'block';
+            btnToggle.classList.toggle('active', !isVisible);
+        };
+    }
+
+    if (btnClose && panel) {
+        btnClose.onclick = () => {
+            panel.style.display = 'none';
+            if (btnToggle) btnToggle.classList.remove('active');
+        };
+    }
+
+    // Fechar painel ao clicar fora dele
+    document.addEventListener('click', (e) => {
+        if (panel && panel.style.display === 'block') {
+            if (!panel.contains(e.target) && e.target !== btnToggle && !btnToggle.contains(e.target)) {
+                panel.style.display = 'none';
+                if (btnToggle) btnToggle.classList.remove('active');
+            }
+        }
+    });
+
+    // Botão Aplicar Filtros
+    const btnApply = document.getElementById('btn-apply-filters');
+    if (btnApply) {
+        btnApply.onclick = () => {
+            filterState.floor = document.getElementById('filter-floor').value;
+            filterState.sector = document.getElementById('filter-sector').value;
+            filterState.block = document.getElementById('filter-block').value;
+            filterState.inventoryLocation = document.getElementById('filter-inventory').value.toLowerCase();
+            filterState.week = document.getElementById('filter-week').value;
+            filterState.risk = document.getElementById('filter-risk').value;
+            filterState.valueRange = document.getElementById('filter-value-range').value;
+            filterState.category = document.getElementById('filter-category').value;
+            filterState.systemType = document.getElementById('filter-system-type').value;
+            filterState.type = document.getElementById('filter-type').value.toLowerCase();
+
+            if (panel) panel.style.display = 'none';
+            if (btnToggle) btnToggle.classList.remove('active');
+
+            fetchData();
+        };
+    }
+
+    // Botão Limpar Filtros
+    const btnClear = document.getElementById('btn-clear-filters');
+    if (btnClear) {
+        btnClear.onclick = () => {
+            // Reseta o estado global (mantendo a busca global se houver)
+            const currentSearch = search ? search.value : '';
+            filterState = {
+                search: currentSearch.toLowerCase(),
+                floor: '', sector: '', block: '', inventoryLocation: '',
+                week: '', risk: '', street: '', valueRange: '',
+                category: '', type: '', systemType: ''
+            };
+
+            // Reseta os elementos da UI
+            ['filter-floor', 'filter-sector', 'filter-block', 'filter-risk',
+                'filter-value-range', 'filter-category', 'filter-system-type'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+
+            ['filter-inventory', 'filter-week', 'filter-type'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            fetchData();
+        };
+    }
+
+    // Botão Sync (Sincronização)
+    const btnSync = document.getElementById('btn-sync');
+    if (btnSync) {
+        btnSync.onclick = async () => {
+            UIUtils.showLoading(true);
+            btnSync.classList.add('syncing');
+            try {
+                // Simulação ou chamada real de sincronização
+                await new Promise(r => setTimeout(r, 1000));
+                fetchData();
+                updateNavBadges();
+            } finally {
+                UIUtils.showLoading(false);
+                btnSync.classList.remove('syncing');
+            }
         };
     }
 }
@@ -429,6 +612,7 @@ function triggerFilter() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initEvents();
+    initFoundModal();
     loadModule('registers', 'PENDENTES');
     updateNavBadges();
 });
